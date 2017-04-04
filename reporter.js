@@ -34,11 +34,7 @@
              type = function(arg) {
                  var t = typeof arg;
                  if (t === 'object') {
-                     if (arg === null) {
-                         return 'null';
-                     } else {
-                         return Object.prototype.toString.call(arg).slice(8, -1).toLowerCase();
-                     }
+                     return arg === null ? 'null' :  Object.prototype.toString.call(arg).slice(8, -1).toLowerCase();
                  } else {
                      return t;
                  }
