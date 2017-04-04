@@ -2,25 +2,26 @@
   * 前端异常监控
   * Author：李彦峰
   *
-  * 0 代码错误
-  * 1 主动上报的错误
-  * 2 主动上报的warn
-  * 3 图片挂了
+  * 自定义的error code:
+  *  0 代码错误
+  *  1 主动上报的错误
+  *  2 主动上报的warn
+  *  3 图片挂了
   */
  (function(window) {
      'use strict';
      //  接收报告信息的接口
      var url = '//x.x.x.x/error_reciver'
      /**
-      * 1、减少传数量，在后台拿出UA即可
+      * 1、减少传输量，在后台拿出UA即可
       * 没必要在前端分析操作系统、浏览器、浏览器版本
       *
-      * 2、减少传数量，在后台拿到refer，这样发生异常的url也不用传输了
+      * 2、减少传输量，在后台拿到refer，这样发生异常的url也不用传输了
       */
 
      /*
         原生ajax函数。用法与jquery ajax一致。
-        author:pod4g
+        author:李彦峰
         修改时间:2016,02,20
         版本:1.1
         https://github.com/pod4g/qAjax
@@ -31,8 +32,7 @@
          var
              data = opts.data || {}, // 请求参数
              type = function(arg) {
-                 var t = typeof arg,
-                     s;
+                 var t = typeof arg;
                  if (t === 'object') {
                      if (arg === null) {
                          return 'null';
@@ -113,7 +113,7 @@
      }
 
      function isFunctionOrObject(obj) {
-         return /function/.test(typeof obj)
+         return /function/.test(typeof obj) || isObject(obj)
      }
 
      function encode(str){
