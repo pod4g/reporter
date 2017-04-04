@@ -1,7 +1,7 @@
  /**
   * 前端异常监控
   * Author：李彦峰
-  * 
+  *
   * 0 代码错误
   * 1 主动上报的错误
   * 2 主动上报的warn
@@ -9,6 +9,8 @@
   */
  (function(window) {
      'use strict';
+     //  接收报告信息的接口
+     var url = '//x.x.x.x/error_reciver'
      /**
       * 1、减少传数量，在后台拿出UA即可
       * 没必要在前端分析操作系统、浏览器、浏览器版本
@@ -35,16 +37,14 @@
                      if (arg === null) {
                          return 'null';
                      } else {
-                         s = Object.prototype.toString.call(arg);
-                         return s.slice(8, -1).toLowerCase();
+                         return Object.prototype.toString.call(arg).slice(8, -1).toLowerCase();
                      }
                  } else {
                      return t;
                  }
              },
              prop2prame = function(data) {
-                 var ret = "",
-                     prop;
+                 var ret = "", prop;
                  if (!data || type(data) !== 'object') {
                      return ret;
                  }
@@ -73,26 +73,29 @@
          // 在server端拿到的c为["9","_cb__4553"]
          // 导致insert到数据库中报语法错误
          param = param.concat('b').concat('=').concat(callbackParamValue);
-         if (url.indexOf('?') == -1) {
-             param = '?' + param;
-         } else {
-             param = '&' + param;
-         }
-
+         param = url.indexOf('?') == -1? '?' + param : '&' + param;
+        //  if (url.indexOf('?') == -1) {
+        //      param = '?' + param;
+        //  } else {
+        //      param = '&' + param;
+        //  }
          var doJSONP = function(src) {
-             var __script__ = document.createElement('script');
-             __script__.type = 'text/javascript';
-             __script__.src = src;
+             var
+                 doc = document,
+                 body = doc.body,
+                 __script__ = doc.createElement('script');
+                 __script__.type = 'text/javascript';
+                 __script__.src = src;
              window[callbackParamValue] = function() {
                  // 执行完毕之后，抹除JSONP标记
-                 window[callbackParamValue] = undefined;
-                 document.body.removeChild(__script__);
+                 window[callbackParamValue] = void 0;
+                 body.removeChild(__script__);
              }
-             document.body.appendChild(__script__);
+             body.appendChild(__script__);
              var timeout = opts.timeout || 5000;
              if (timeout > 0) {
                  setTimeout(function() {
-                     document.body.removeChild(__script__);
+                     body.removeChild(__script__);
                  }, timeout)
              }
          }
@@ -100,16 +103,17 @@
      }
 
      function addEvent(obj, event, handler) {
-         if (obj.addEventListener) {
-             obj.addEventListener(event, handler);
-         } else if (obj.attachEvent) {
-             obj.attachEvent('on' + event, handler);
-         }
+         return obj.addEventListene? obj.addEventListener(event, handler) : obj.attachEvent('on' + event, handler)
+     }
+     function isObject(obj) {
+       if(obj === null){
+         return false
+       }
+       return /object/.test(typeof obj)
      }
 
      function isFunctionOrObject(obj) {
-         var type = typeof obj;
-         return type === 'function' || type === 'object';
+         return /function/.test(typeof obj)
      }
 
      function encode(str){
@@ -132,22 +136,17 @@
 
          function errorHook(msg) {
              var type = typeof msg;
-             var err = {
-                 "t": 1
-             }
-             if (type === 'string' || type === 'number') {
+             var err = { "t": 1 }
+             if (/string|number/.test(type)) {
                  err.m = encode(msg);
-             } else if (type === 'object') {
+             } else if (isObject(msg)) {
                  err.m = encode(msg.message);
                  err.f = msg.filename || '';
                  err.l = msg.lineno || '';
                  err.c = msg.colno || '';
              }
              // console.log('触发主动上报error' + JSON.stringify(err));
-             request({
-                 url: '//120.27.45.36:3003/error_reciver',
-                 data: err
-             });
+             request({ url: url, data: err });
          }
 
          function warnHook(msg) {
@@ -156,9 +155,9 @@
                  "m": encode(msg)
              }
              // console.log('触发主动上报warn' + JSON.stringify(warn));
-             // request({url:'//120.27.45.36:3003/error_reciver', data:JSON.stringify({type:'warn',message: msg})};
+             // request({url:url, data:JSON.stringify({type:'warn',message: msg})};
              request({
-                 url: '//120.27.45.36:3003/error_reciver',
+                 url: url,
                  data: warn
              });
          }
@@ -232,7 +231,7 @@
          // e.preventDefault(); // 不报错
          if(error){
             request({
-                 url: '//120.27.45.36:3003/error_reciver',
+                 url: url,
                  data: error
             });
          }
@@ -255,7 +254,7 @@
                 m: encode(brokens.join(','))
              };
              request({
-                 url: '//120.27.45.36:3003/error_reciver',
+                 url: url,
                  data: error
              });
          }
