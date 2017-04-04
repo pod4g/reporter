@@ -12,6 +12,14 @@
      'use strict';
      //  接收报告信息的接口
      var url = '//x.x.x.x/error_reciver'
+     function type(arg) {
+         var t = typeof arg;
+         if (t === 'object') {
+             return arg === null ? 'null' :  Object.prototype.toString.call(arg).slice(8, -1).toLowerCase();
+         } else {
+             return t;
+         }
+     }
      /**
       * 1、减少传输量，在后台拿出UA即可
       * 没必要在前端分析操作系统、浏览器、浏览器版本
@@ -29,33 +37,24 @@
      // TODO: 作为上报组件的一个功能。简化成只支持JSONP即可
      // 这样就支持IE8+以上的上报了。
      function request(opts) {
-         var
-             data = opts.data || {}, // 请求参数
-             type = function(arg) {
-                 var t = typeof arg;
-                 if (t === 'object') {
-                     return arg === null ? 'null' :  Object.prototype.toString.call(arg).slice(8, -1).toLowerCase();
-                 } else {
-                     return t;
-                 }
-             },
-             prop2prame = function(data) {
-                 var ret = "", prop;
-                 if (!data || type(data) !== 'object') {
-                     return ret;
-                 }
-                 for (prop in data) {
-                     var val = data[prop];
-                     if (type(val) === "array") {
-                         for (var i = 0, l = val.length; i < l; i++) {
-                             ret += prop + "=" + val[i] + "&";
-                         }
-                     } else {
-                         ret += prop + "=" + val + "&";
-                     }
-                 }
+         var data = opts.data || {}; // 请求参数
+         prop2prame = function(data) {
+             var ret = "", prop;
+             if (!data || type(data) !== 'object') {
                  return ret;
-             };
+             }
+             for (prop in data) {
+                 var val = data[prop];
+                 if (type(val) === "array") {
+                     for (var i = 0, l = val.length; i < l; i++) {
+                         ret += prop + "=" + val[i] + "&";
+                     }
+                 } else {
+                     ret += prop + "=" + val + "&";
+                 }
+             }
+             return ret;
+         };
          // 尽可能地缩短传输参数。
          // 在IE8 下的URL地址总长度为：4076，超过该长度会自动忽略后面的内容；
          // 在firefox 25下的URL地址总长度可以达到:7530，超过该长度会访问错误；
@@ -102,14 +101,11 @@
          return obj.addEventListene? obj.addEventListener(event, handler) : obj.attachEvent('on' + event, handler)
      }
      function isObject(obj) {
-       if(obj === null){
-         return false
-       }
-       return /object/.test(typeof obj)
+       return /object/.test(type(obj))
      }
 
      function isFunctionOrObject(obj) {
-         return /function/.test(typeof obj) || isObject(obj)
+         return /function/.test(type(obj)) || isObject(obj)
      }
 
      function encode(str){
@@ -131,9 +127,9 @@
      (function() {
 
          function errorHook(msg) {
-             var type = typeof msg;
+             var types = type(msg);
              var err = { "t": 1 }
-             if (/string|number/.test(type)) {
+             if (/string|number/.test(types)) {
                  err.m = encode(msg);
              } else if (isObject(msg)) {
                  err.m = encode(msg.message);
@@ -152,10 +148,10 @@
              }
              // console.log('触发主动上报warn' + JSON.stringify(warn));
              // request({url:url, data:JSON.stringify({type:'warn',message: msg})};
-             request({
-                 url: url,
-                 data: warn
-             });
+             request ({
+               url: url,
+               data: warn
+            });
          }
 
          var console = window.console;
